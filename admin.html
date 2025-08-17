@@ -1,138 +1,218 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Admin • G2i Analytics</title>
-  <link rel="icon" href="logo.png" type="image/png"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>G2i Analytics • Admin</title>
+  <!-- Fonts & Tailwind (CDN) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Montserrat', 'ui-sans-serif', 'system-ui'] },
+          colors: {
+            brand: {
+              DEFAULT: '#ff5a1f', /* laranja G2i */
+              600: '#e5521c',
+              700: '#c64616',
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 30px rgba(0,0,0,.08)'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="icon" href="./logo.png" type="image/png">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="./app-config.js"></script>
-  <script>window.PAGE_ID = "admin";</script>
-  <script defer src="./guard.js"></script>
-  <style>
-    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .sub{color:var(--muted);font-size:14px}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr; gap:16px}
-    @media (max-width: 720px){ .form-grid{grid-template-columns:1fr} }
-    .btn-outline{background:#fff;color:var(--brand);border:1px solid var(--brand)}
-    .btn-outline:hover{background:#fff0ea}
-    .status{padding:8px 12px;border-radius:12px;background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0;display:none}
-    .status.err{background:#fef2f2;color:#991b1b;border-color:#fecaca}
-    .table{width:100%; border-collapse:collapse}
-    .table th,.table td{padding:10px 12px; border-bottom:1px solid var(--stroke); text-align:left}
-    .kicker{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,90,31,.12);color:var(--brand-700);font-weight:800;font-size:12px;letter-spacing:.3px;text-transform:uppercase}
-  </style>
+  <style> body{font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial} </style>
 </head>
-<body>
-  <div class="container">
-    <header class="header toolbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <img src="./logo.png" alt="G2i Analytics" class="logo" onerror="this.style.display='none'">
+<body class="bg-gray-50 text-slate-900">
+  <!-- Top bar -->
+  <header class="bg-white shadow-soft border-b border-slate-100">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="./logo.png" alt="G2i" class="w-10 h-10 rounded-lg object-contain"/>
         <div>
-          <div class="brand">G2i Analytics</div>
-          <div class="sub">Painel Administrativo</div>
+          <div class="text-xl font-extrabold tracking-tight">G2i Analytics</div>
+          <div class="text-xs text-slate-500 -mt-0.5">Painel Administrativo</div>
         </div>
       </div>
-      <nav style="display:flex;align-items:center;gap:8px">
-        <a class="pill link" href="/app.html">Hub</a>
+      <nav class="flex items-center gap-2">
+        <a href="./app.html" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm font-semibold">Hub</a>
+        <button id="logout" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm font-semibold">Sair</button>
       </nav>
-    </header>
+    </div>
+  </header>
 
-    <section class="card">
-      <div class="kicker">Acessos</div>
-      <h1>Gerenciar permissões de páginas</h1>
-      <p class="sub">Conceda ou revogue acesso por e-mail. As alterações são aplicadas imediatamente.</p>
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <div class="mb-6">
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-brand/10 text-brand-700 border border-brand/30">Acessos</span>
+      <h1 class="text-2xl md:text-3xl font-extrabold mt-3">Gerenciar permissões de páginas</h1>
+      <p class="text-slate-600 mt-1">Conceda ou revogue acesso por e-mail. As alterações são aplicadas imediatamente.</p>
+    </div>
 
-      <div class="form-grid" style="margin-top:16px">
-        <div class="card-mini">
-          <h2 style="margin-bottom:8px">Conceder / Revogar</h2>
-          <div class="row">
-            <label class="label" for="email">E-mail do usuário</label>
-            <input id="email" class="input" placeholder="usuario@empresa.com.br" autocomplete="off"/>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Card: set access -->
+      <section class="bg-white border border-slate-100 rounded-2xl p-6 shadow-soft">
+        <h2 class="text-lg font-bold mb-4">Conceder / Revogar</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-slate-600 mb-1" for="email">E-mail do usuário</label>
+            <input id="email" type="email" placeholder="usuario@empresa.com.br"
+                   class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 focus:outline-none focus:ring-4 focus:ring-brand/20">
           </div>
-          <div class="row">
-            <label class="label" for="page">Página</label>
-            <select id="page" class="input"></select>
+
+          <div>
+            <label class="block text-sm text-slate-600 mb-1" for="page">Página</label>
+            <select id="page"
+                    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 focus:outline-none focus:ring-4 focus:ring-brand/20">
+            </select>
           </div>
-          <div class="row">
-            <label class="label" for="perm">Permissão</label>
-            <select id="perm" class="input">
+
+          <div>
+            <label class="block text-sm text-slate-600 mb-1" for="perm">Permissão</label>
+            <select id="perm"
+                    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 focus:outline-none focus:ring-4 focus:ring-brand/20">
               <option value="true">Liberar</option>
               <option value="false">Revogar</option>
             </select>
           </div>
-          <div class="row">
-            <button id="apply" class="btn">Aplicar</button>
-            <div id="status" class="status" role="status"></div>
+
+          <div class="flex items-center gap-3">
+            <button id="apply" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-600 active:bg-brand-700">
+              Aplicar
+            </button>
+            <div id="status" class="hidden px-3 py-2 rounded-xl text-sm border"></div>
           </div>
         </div>
+      </section>
 
-        <div class="card-mini">
-          <h2 style="margin-bottom:8px">Acessos do usuário</h2>
-          <div class="row">
-            <label class="label" for="emailList">E-mail</label>
-            <input id="emailList" class="input" placeholder="usuario@empresa.com.br" autocomplete="off"/>
+      <!-- Card: list access -->
+      <section class="bg-white border border-slate-100 rounded-2xl p-6 shadow-soft">
+        <h2 class="text-lg font-bold mb-4">Acessos do usuário</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-slate-600 mb-1" for="emailList">E-mail</label>
+            <input id="emailList" type="email" placeholder="usuario@empresa.com.br"
+                   class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 focus:outline-none focus:ring-4 focus:ring-brand/20">
           </div>
-          <div class="row">
-            <button id="list" class="btn btn-outline">Listar acessos</button>
-          </div>
-          <div style="overflow:auto">
-            <table class="table" id="table"></table>
+
+          <button id="list" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 font-bold hover:bg-slate-50">
+            Listar acessos
+          </button>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead>
+                <tr class="text-left text-slate-500 border-b border-slate-200">
+                  <th class="py-2 pr-4">Página</th>
+                  <th class="py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
+  </main>
 
-    <footer>© G2i — Todos os direitos reservados.</footer>
-  </div>
+  <footer class="max-w-6xl mx-auto px-4 py-10 text-xs text-slate-500">
+    © G2i — Todos os direitos reservados.
+  </footer>
 
-<script>
-(async function(){
-  const cfg = window.APP_CONFIG || {};
-  const { createClient } = window.supabase;
-  const supabase = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  <script>
+    // ===== Helper UI
+    function showStatus(ok, msg){
+      const el = document.getElementById('status');
+      el.classList.remove('hidden');
+      el.textContent = msg;
+      el.className = 'px-3 py-2 rounded-xl text-sm border ' + (ok
+        ? 'bg-green-50 text-green-700 border-green-200'
+        : 'bg-red-50 text-red-700 border-red-200');
+    }
 
-  // Preenche as páginas
-  const pgSel = document.getElementById('page');
-  const { data: pages } = await supabase.from('pages').select('page_id,title').order('title');
-  (pages||[]).forEach(p=>{
-    const opt = document.createElement('option');
-    opt.value = p.page_id;
-    opt.textContent = `${p.title} (${p.page_id})`;
-    pgSel.appendChild(opt);
-  });
+    (async () => {
+      // ===== Init Supabase
+      const cfg = window.APP_CONFIG || {};
+      const { createClient } = window.supabase;
+      const supabase = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
-  // Aplicar permissão
-  document.getElementById('apply').addEventListener('click', async ()=>{
-    const email = document.getElementById('email').value.trim();
-    const page = document.getElementById('page').value;
-    const can_view = document.getElementById('perm').value === 'true';
-    const status = document.getElementById('status');
-    status.className='status'; status.style.display='block'; status.textContent='Aplicando...';
-    const { error } = await supabase.rpc('admin_set_access', {
-      target_email: email, target_page_id: page, target_can_view: can_view
-    });
-    if (error){ status.classList.add('err'); status.textContent = 'Erro: ' + error.message; }
-    else { status.textContent = 'OK. Permissão atualizada.'; }
-  });
+      // ===== Require session (guard built-in)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        const backTo = encodeURIComponent(location.pathname + location.search);
+        location.replace(`/login.html?next=${backTo}`);
+        return;
+      }
 
-  // Listar permissões do usuário
-  document.getElementById('list').addEventListener('click', async ()=>{
-    const email = document.getElementById('emailList').value.trim();
-    const table = document.getElementById('table');
-    table.innerHTML = '<tr><td>Carregando...</td></tr>';
-    const { data, error } = await supabase.rpc('admin_list_access', { target_email: email });
-    if (error){ table.innerHTML = '<tr><td style="color:#991b1b">Erro: '+error.message+'</td></tr>'; return; }
-    if (!data || !data.length){ table.innerHTML = '<tr><td>Nenhuma permissão para este usuário.</td></tr>'; return; }
-    table.innerHTML = '<tr><th>Página</th><th>Status</th></tr>' + data.map(r => 
-      `<tr><td>${r.page_id}</td><td>${r.can_view ? 'Liberado' : 'Revogado'}</td></tr>`
-    ).join('');
-  });
-})();
-</script>
+      // Require permission to "admin" page
+      const { data: allowed } = await supabase
+        .from('user_pages').select('page_id, can_view')
+        .eq('user_id', session.user.id).eq('page_id', 'admin').eq('can_view', true).limit(1);
+
+      if (!allowed || !allowed.length){
+        location.replace('/no-access.html'); return;
+      }
+
+      // ===== Fill pages select
+      const sel = document.getElementById('page');
+      const { data: pages, error: pagesErr } = await supabase.from('pages').select('page_id,title').order('title');
+      if (pagesErr) { showStatus(false, 'Erro carregando páginas: ' + pagesErr.message); }
+      (pages||[]).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.page_id;
+        opt.textContent = `${p.title} (${p.page_id})`;
+        sel.appendChild(opt);
+      });
+
+      // ===== Apply permission
+      document.getElementById('apply').addEventListener('click', async () => {
+        const email = document.getElementById('email').value.trim();
+        const pageId = document.getElementById('page').value;
+        const canView = document.getElementById('perm').value === 'true';
+        showStatus(true, 'Aplicando...');
+        const { error } = await supabase.rpc('admin_set_access', {
+          target_email: email,
+          target_page_id: pageId,
+          target_can_view: canView
+        });
+        if (error) showStatus(false, 'Erro: ' + error.message);
+        else showStatus(true, 'OK. Permissão atualizada.');
+      });
+
+      // ===== List permissions
+      document.getElementById('list').addEventListener('click', async () => {
+        const email = document.getElementById('emailList').value.trim();
+        const tbody = document.getElementById('rows');
+        tbody.innerHTML = '<tr><td class="py-3 text-slate-500" colspan="2">Carregando...</td></tr>';
+        const { data, error } = await supabase.rpc('admin_list_access', { target_email: email });
+        if (error) { tbody.innerHTML = '<tr><td class="py-3 text-red-600" colspan="2">Erro: ' + error.message + '</td></tr>'; return; }
+        if (!data || !data.length) { tbody.innerHTML = '<tr><td class="py-3 text-slate-500" colspan="2">Nenhuma permissão para este usuário.</td></tr>'; return; }
+        tbody.innerHTML = data.map(r => `
+          <tr class="border-b border-slate-100">
+            <td class="py-2 pr-4">${r.page_id}</td>
+            <td class="py-2">${r.can_view ? '✅ Liberado' : '❌ Revogado'}</td>
+          </tr>
+        `).join('');
+      });
+
+      // ===== Logout
+      document.getElementById('logout').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        location.replace('/login.html');
+      });
+    })();
+  </script>
 </body>
 </html>
