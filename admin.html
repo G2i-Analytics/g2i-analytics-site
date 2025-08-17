@@ -5,60 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Admin • G2i Analytics</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="./app-config.js"></script>
   <script>
+    // Página protegida
     window.PAGE_ID = "admin";
   </script>
   <script defer src="./guard.js"></script>
+  <style>
+    /* complementos específicos desta página, reaproveitando a paleta */
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .sub{color:var(--muted);font-size:14px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr; gap:16px}
+    @media (max-width: 720px){ .form-grid{grid-template-columns:1fr} }
+    .btn-outline{background:#fff;color:var(--brand);border-color:var(--brand)}
+    .btn-outline:hover{background:#fff0ea}
+    .status{padding:8px 12px;border-radius:12px;background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0;display:none}
+    .status.err{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+    .table{width:100%; border-collapse:collapse}
+    .table th,.table td{padding:10px 12px; border-bottom:1px solid var(--stroke); text-align:left}
+    .kicker{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,90,31,.12);color:var(--brand-700);font-weight:800;font-size:12px;letter-spacing:.3px;text-transform:uppercase}
+  </style>
 </head>
-<body data-page-id="admin">
+<body>
   <div class="container">
-    <header class="header" style="justify-content:space-between">
+    <header class="header toolbar">
       <div style="display:flex;align-items:center;gap:12px">
         <img src="./logo.svg" alt="G2i Analytics" class="logo" onerror="this.style.display='none'">
-        <div class="brand">G2i Analytics • Admin</div>
+        <div>
+          <div class="brand">G2i Analytics</div>
+          <div class="sub">Painel Administrativo</div>
+        </div>
       </div>
-      <nav><a class="pill link" href="/app.html">Hub</a></nav>
+      <nav style="display:flex;align-items:center;gap:8px">
+        <a class="pill link" href="/app.html">Hub</a>
+      </nav>
     </header>
 
-    <main class="card">
-      <h1>Gerenciar acessos</h1>
-      <p>Conceda ou revogue acesso a páginas por e-mail.</p>
-      <div class="grid" style="margin-top:8px">
+    <section class="card">
+      <div class="kicker">Acessos</div>
+      <h1>Gerenciar permissões de páginas</h1>
+      <p class="sub">Conceda ou revogue acesso por e-mail. As alterações são aplicadas imediatamente.</p>
+
+      <div class="form-grid" style="margin-top:16px">
         <div class="card-mini">
-          <h2>Conceder/Revogar</h2>
+          <h2 style="margin-bottom:8px">Conceder / Revogar</h2>
           <div class="row">
             <label class="label" for="email">E-mail do usuário</label>
-            <input id="email" class="input" placeholder="usuario@empresa.com.br"/>
+            <input id="email" class="input" placeholder="usuario@empresa.com.br" autocomplete="off"/>
           </div>
           <div class="row">
             <label class="label" for="page">Página</label>
             <select id="page" class="input"></select>
           </div>
           <div class="row">
-            <label class="label" for="can_view">Permissão</label>
-            <select id="can_view" class="input">
+            <label class="label" for="perm">Permissão</label>
+            <select id="perm" class="input">
               <option value="true">Liberar</option>
               <option value="false">Revogar</option>
             </select>
           </div>
-          <button id="apply" class="btn">Aplicar</button>
-          <div id="msg" style="margin-top:10px;color:#0f172a"></div>
+          <div class="row">
+            <button id="apply" class="btn">Aplicar</button>
+            <div id="status" class="status" role="status"></div>
+          </div>
         </div>
 
         <div class="card-mini">
-          <h2>Ver acessos do usuário</h2>
+          <h2 style="margin-bottom:8px">Acessos do usuário</h2>
           <div class="row">
-            <label class="label" for="email_list">E-mail</label>
-            <input id="email_list" class="input" placeholder="usuario@empresa.com.br"/>
+            <label class="label" for="emailList">E-mail</label>
+            <input id="emailList" class="input" placeholder="usuario@empresa.com.br" autocomplete="off"/>
           </div>
-          <button id="list" class="btn">Listar acessos</button>
-          <div id="listout" style="margin-top:12px;font-size:14px;color:#334155"></div>
+          <div class="row">
+            <button id="list" class="btn btn-outline">Listar acessos</button>
+          </div>
+          <div style="overflow:auto">
+            <table class="table" id="table"></table>
+          </div>
         </div>
       </div>
-    </main>
+    </section>
+
+    <footer>© G2i — Todos os direitos reservados.</footer>
   </div>
 
 <script>
@@ -67,44 +100,42 @@
   const { createClient } = window.supabase;
   const supabase = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
-  // Preenche combo de páginas
+  // Preenche as páginas
+  const pgSel = document.getElementById('page');
   const { data: pages } = await supabase.from('pages').select('page_id,title').order('title');
-  const sel = document.getElementById('page');
-  (pages||[]).forEach(p => {
+  (pages||[]).forEach(p=>{
     const opt = document.createElement('option');
     opt.value = p.page_id;
     opt.textContent = `${p.title} (${p.page_id})`;
-    sel.appendChild(opt);
+    pgSel.appendChild(opt);
   });
 
-  async function apply(){
+  // Aplicar permissão
+  document.getElementById('apply').addEventListener('click', async ()=>{
     const email = document.getElementById('email').value.trim();
     const page = document.getElementById('page').value;
-    const can_view = document.getElementById('can_view').value === 'true';
-    const msg = document.getElementById('msg');
-    msg.textContent = 'Aplicando...';
-
-    const { data, error } = await supabase.rpc('admin_set_access', {
-      target_email: email,
-      target_page_id: page,
-      target_can_view: can_view
+    const can_view = document.getElementById('perm').value === 'true';
+    const status = document.getElementById('status');
+    status.className='status'; status.style.display='block'; status.textContent='Aplicando...';
+    const { error } = await supabase.rpc('admin_set_access', {
+      target_email: email, target_page_id: page, target_can_view: can_view
     });
-    if (error) { msg.style.color = '#b91c1c'; msg.textContent = 'Erro: ' + error.message; return; }
-    msg.style.color = '#065f46'; msg.textContent = 'OK. Permissão atualizada.';
-  }
+    if (error){ status.classList.add('err'); status.textContent = 'Erro: ' + error.message; }
+    else { status.textContent = 'OK. Permissão atualizada.'; }
+  });
 
-  async function listAccess(){
-    const email = document.getElementById('email_list').value.trim();
-    const out = document.getElementById('listout');
-    out.textContent = 'Carregando...';
+  // Listar permissões do usuário
+  document.getElementById('list').addEventListener('click', async ()=>{
+    const email = document.getElementById('emailList').value.trim();
+    const table = document.getElementById('table');
+    table.innerHTML = '<tr><td>Carregando...</td></tr>';
     const { data, error } = await supabase.rpc('admin_list_access', { target_email: email });
-    if (error) { out.style.color = '#b91c1c'; out.textContent = 'Erro: ' + error.message; return; }
-    if (!data || !data.length) { out.textContent = 'Nenhuma permissão encontrada para este usuário.'; return; }
-    out.innerHTML = '<ul style="margin:0;padding-left:18px">' + data.map(r => `<li>${r.page_id} → ${r.can_view ? 'liberado' : 'revogado'}</li>`).join('') + '</ul>';
-  }
-
-  document.getElementById('apply').addEventListener('click', apply);
-  document.getElementById('list').addEventListener('click', listAccess);
+    if (error){ table.innerHTML = '<tr><td style="color:#991b1b">Erro: '+error.message+'</td></tr>'; return; }
+    if (!data || !data.length){ table.innerHTML = '<tr><td>Nenhuma permissão para este usuário.</td></tr>'; return; }
+    table.innerHTML = '<tr><th>Página</th><th>Status</th></tr>' + data.map(r => 
+      `<tr><td>${r.page_id}</td><td>${r.can_view ? 'Liberado' : 'Revogado'}</td></tr>`
+    ).join('');
+  });
 })();
 </script>
 </body>
