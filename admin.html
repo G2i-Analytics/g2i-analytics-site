@@ -4,25 +4,21 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Admin • G2i Analytics</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+  <link rel="icon" href="logo.png" type="image/png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="./app-config.js"></script>
-  <script>
-    // Página protegida
-    window.PAGE_ID = "admin";
-  </script>
+  <script>window.PAGE_ID = "admin";</script>
   <script defer src="./guard.js"></script>
   <style>
-    /* complementos específicos desta página, reaproveitando a paleta */
     .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sub{color:var(--muted);font-size:14px}
     .form-grid{display:grid;grid-template-columns:1fr 1fr; gap:16px}
     @media (max-width: 720px){ .form-grid{grid-template-columns:1fr} }
-    .btn-outline{background:#fff;color:var(--brand);border-color:var(--brand)}
+    .btn-outline{background:#fff;color:var(--brand);border:1px solid var(--brand)}
     .btn-outline:hover{background:#fff0ea}
     .status{padding:8px 12px;border-radius:12px;background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0;display:none}
     .status.err{background:#fef2f2;color:#991b1b;border-color:#fecaca}
@@ -35,7 +31,7 @@
   <div class="container">
     <header class="header toolbar">
       <div style="display:flex;align-items:center;gap:12px">
-        <img src="./logo.svg" alt="G2i Analytics" class="logo" onerror="this.style.display='none'">
+        <img src="./logo.png" alt="G2i Analytics" class="logo" onerror="this.style.display='none'">
         <div>
           <div class="brand">G2i Analytics</div>
           <div class="sub">Painel Administrativo</div>
