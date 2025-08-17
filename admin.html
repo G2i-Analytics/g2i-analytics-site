@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin • G2i Analytics</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="./styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./app-config.js"></script>
+  <script>
+    window.PAGE_ID = "admin";
+  </script>
+  <script defer src="./guard.js"></script>
+</head>
+<body data-page-id="admin">
+  <div class="container">
+    <header class="header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="./logo.svg" alt="G2i Analytics" class="logo" onerror="this.style.display='none'">
+        <div class="brand">G2i Analytics • Admin</div>
+      </div>
+      <nav><a class="pill link" href="/app.html">Hub</a></nav>
+    </header>
+
+    <main class="card">
+      <h1>Gerenciar acessos</h1>
+      <p>Conceda ou revogue acesso a páginas por e-mail.</p>
+      <div class="grid" style="margin-top:8px">
+        <div class="card-mini">
+          <h2>Conceder/Revogar</h2>
+          <div class="row">
+            <label class="label" for="email">E-mail do usuário</label>
+            <input id="email" class="input" placeholder="usuario@empresa.com.br"/>
+          </div>
+          <div class="row">
+            <label class="label" for="page">Página</label>
+            <select id="page" class="input"></select>
+          </div>
+          <div class="row">
+            <label class="label" for="can_view">Permissão</label>
+            <select id="can_view" class="input">
+              <option value="true">Liberar</option>
+              <option value="false">Revogar</option>
+            </select>
+          </div>
+          <button id="apply" class="btn">Aplicar</button>
+          <div id="msg" style="margin-top:10px;color:#0f172a"></div>
+        </div>
+
+        <div class="card-mini">
+          <h2>Ver acessos do usuário</h2>
+          <div class="row">
+            <label class="label" for="email_list">E-mail</label>
+            <input id="email_list" class="input" placeholder="usuario@empresa.com.br"/>
+          </div>
+          <button id="list" class="btn">Listar acessos</button>
+          <div id="listout" style="margin-top:12px;font-size:14px;color:#334155"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+(async function(){
+  const cfg = window.APP_CONFIG || {};
+  const { createClient } = window.supabase;
+  const supabase = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+
+  // Preenche combo de páginas
+  const { data: pages } = await supabase.from('pages').select('page_id,title').order('title');
+  const sel = document.getElementById('page');
+  (pages||[]).forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.page_id;
+    opt.textContent = `${p.title} (${p.page_id})`;
+    sel.appendChild(opt);
+  });
+
+  async function apply(){
+    const email = document.getElementById('email').value.trim();
+    const page = document.getElementById('page').value;
+    const can_view = document.getElementById('can_view').value === 'true';
+    const msg = document.getElementById('msg');
+    msg.textContent = 'Aplicando...';
+
+    const { data, error } = await supabase.rpc('admin_set_access', {
+      target_email: email,
+      target_page_id: page,
+      target_can_view: can_view
+    });
+    if (error) { msg.style.color = '#b91c1c'; msg.textContent = 'Erro: ' + error.message; return; }
+    msg.style.color = '#065f46'; msg.textContent = 'OK. Permissão atualizada.';
+  }
+
+  async function listAccess(){
+    const email = document.getElementById('email_list').value.trim();
+    const out = document.getElementById('listout');
+    out.textContent = 'Carregando...';
+    const { data, error } = await supabase.rpc('admin_list_access', { target_email: email });
+    if (error) { out.style.color = '#b91c1c'; out.textContent = 'Erro: ' + error.message; return; }
+    if (!data || !data.length) { out.textContent = 'Nenhuma permissão encontrada para este usuário.'; return; }
+    out.innerHTML = '<ul style="margin:0;padding-left:18px">' + data.map(r => `<li>${r.page_id} → ${r.can_view ? 'liberado' : 'revogado'}</li>`).join('') + '</ul>';
+  }
+
+  document.getElementById('apply').addEventListener('click', apply);
+  document.getElementById('list').addEventListener('click', listAccess);
+})();
+</script>
+</body>
+</html>
