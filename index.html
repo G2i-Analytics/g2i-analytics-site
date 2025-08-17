@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>G2i Analytics — Em construção</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root{ --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --accent:#22c55e;}
+    * { box-sizing:border-box }
+    html,body{height:100%}
+    body{margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+         background:linear-gradient(180deg,#0f172a 0%, #111827 100%); color:var(--text);
+         display:flex; align-items:center; justify-content:center; padding:24px}
+    .card{ text-align:center; padding:32px 28px; background:rgba(17,24,39,.6); border:1px solid rgba(255,255,255,.06);
+           border-radius:20px; box-shadow: 0 10px 30px rgba(0,0,0,.35); max-width:640px; width:100%}
+    h1{font-size: clamp(28px, 4vw, 44px); margin:0 0 8px}
+    p{margin:0 0 16px; color:var(--muted); font-size: clamp(14px, 2vw, 18px)}
+    .tag{display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(34,197,94,.15); color:#86efac;
+         font-weight:600; letter-spacing:.3px; text-transform:uppercase; font-size:12px; margin-bottom:12px}
+    footer{margin-top:16px; font-size:12px; color:#64748b}
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-label="G2i Analytics">
+    <div class="tag">Em construção</div>
+    <h1>G2i Analytics</h1>
+    <p>Este será o hub de dashboards do Grupo 2 Irmãos.</p>
+    <p>Enquanto isso, você pode acompanhar o progresso por aqui.</p>
+    <footer>Build <span id="build"></span></footer>
+  </main>
+<script>
+  (function(){
+    var dt = new Date();
+    var pad = n=>String(n).padStart(2,'0');
+    document.getElementById('build').textContent =
+      dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+' '+pad(dt.getHours())+':'+pad(dt.getMinutes());
+  })();
+</script>
+</body>
+</html>
