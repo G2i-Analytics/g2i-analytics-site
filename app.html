@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>G2i Analytics • Hub</title>
+  
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" href="./Logo.png" type="image/png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Montserrat','ui-sans-serif','system-ui']},colors:{brand:{DEFAULT:'#ff5a1f',600:'#e5521c',700:'#c64616'}},boxShadow:{soft:'0 10px 30px rgba(0,0,0,.08)'}}}}</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./app-config.js"></script>
+
+</head>
+<body class="bg-gray-50 text-slate-900">
+  <header class="bg-white shadow-soft border-b border-slate-100">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="./Logo.png" alt="G2i" class="w-10 h-10 rounded-lg object-contain"/>
+        <div>
+          <div class="text-xl font-extrabold tracking-tight">G2i Analytics</div>
+          <div class="text-xs text-slate-500 -mt-0.5">Hub de dashboards</div>
+        </div>
+      </div>
+      <nav class="flex items-center gap-2">
+        <a href="./admin.html" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm font-semibold">Admin</a>
+        <button id="logout" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm font-semibold">Sair</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-4">Suas páginas</h1>
+    <p class="text-slate-600 mb-6">Selecione um painel disponível para você.</p>
+
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <script>
+    (async () => {
+      const cfg = window.APP_CONFIG || {};
+      const { createClient } = window.supabase;
+      const supabase = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+
+      // exige sessão
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        location.replace('/login.html?next=' + encodeURIComponent(location.pathname)); return;
+      }
+
+      // carrega páginas permitidas
+      const up = await supabase.from('user_pages').select('page_id, can_view').eq('user_id', session.user.id).eq('can_view', true);
+      const ids = (up.data || []).map(r => r.page_id);
+      let pages = [];
+      if (ids.length) {
+        const res = await supabase.from('pages').select('page_id,title,url').in('page_id', ids).order('title');
+        pages = res.data || [];
+      }
+
+      const grid = document.getElementById('grid');
+      if (!pages.length) {
+        grid.innerHTML = '<div class="text-slate-600">Nenhuma página liberada para seu usuário.</div>';
+        return;
+      }
+
+      grid.innerHTML = pages.map(p => `
+        <a href="${p.url}" class="block bg-white border border-slate-100 rounded-2xl p-5 shadow-soft hover:shadow-md transition">
+          <div class="text-sm text-slate-500 mb-1">Painel</div>
+          <div class="text-lg font-bold mb-2">${p.title}</div>
+          <div class="text-brand font-semibold">Abrir →</div>
+        </a>
+      `).join('');
+
+      document.getElementById('logout').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        location.replace('/login.html');
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <title>G2i Analytics • Compras</title>
+  
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" href="./Logo.png" type="image/png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Montserrat','ui-sans-serif','system-ui']},colors:{brand:{DEFAULT:'#ff5a1f',600:'#e5521c',700:'#c64616'}},boxShadow:{soft:'0 10px 30px rgba(0,0,0,.08)'}}}}</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./app-config.js"></script>
+
+</head>
+<body class="bg-gray-50 text-slate-900">
+  <header class="bg-white shadow-soft border-b border-slate-100">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="./Logo.png" alt="G2i" class="w-10 h-10 rounded-lg object-contain"/>
+        <div>
+          <div class="text-xl font-extrabold tracking-tight">Compras</div>
+          <div class="text-xs text-slate-500 -mt-0.5">Painel</div>
+        </div>
+      </div>
+      <nav class="flex items-center gap-2">
+        <a href="./app.html" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-sm font-semibold">Hub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <div id="wrap" class="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-soft">
+      <!-- IFRAME DO METABASE AQUI -->
+      <iframe id="mb" src="" frameborder="0" allowtransparency="true" class="w-full" style="height:80vh"></iframe>
+    </div>
+    <p id="warn" class="hidden text-slate-600 mt-3">Cole o link público do painel do Metabase dentro de <code>compras.html</code> (variável <strong>METABASE_PUBLIC_URL</strong>), ou me informe que eu coloco.</p>
+  </main>
+
+  <script>
+    // ===== Guard: exige login e permissão para 'compras'
+    (async () => {
+      const cfg = window.APP_CONFIG || {};
+      const { createClient } = window.supabase;
+      const supabase = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) { location.replace('/login.html?next=' + encodeURIComponent(location.pathname)); return; }
+      const allow = await supabase.from('user_pages').select('page_id, can_view')
+                      .eq('user_id', session.user.id).eq('page_id','compras').eq('can_view',true).limit(1);
+      if (!allow.data || !allow.data.length) { location.replace('/no-access.html'); return; }
+
+      // ===== Metabase embed
+      const METABASE_PUBLIC_URL = window.METABASE_PUBLIC_COMPRAS || "PASTE_METABASE_PUBLIC_LINK_HERE";
+      const warn = document.getElementById('warn');
+      const iframe = document.getElementById('mb');
+      if (!METABASE_PUBLIC_URL || METABASE_PUBLIC_URL.includes('PASTE_METABASE_PUBLIC_LINK_HERE')) {
+        warn.classList.remove('hidden');
+      } else {
+        iframe.src = METABASE_PUBLIC_URL + '#theme=night&bordered=true&titled=true';
+      }
+    })();
+  </script>
+</body>
+</html>
