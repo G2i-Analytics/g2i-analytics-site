@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>G2i Analytics • Admin</title>
-  <!-- Fonts & Tailwind (CDN) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -14,28 +13,23 @@
       theme: {
         extend: {
           fontFamily: { sans: ['Montserrat', 'ui-sans-serif', 'system-ui'] },
-          colors: {
-            brand: {
-              DEFAULT: '#ff5a1f',
-              600: '#e5521c',
-              700: '#c64616',
-            }
-          },
+          colors: { brand: { DEFAULT: '#ff5a1f', 600: '#e5521c', 700: '#c64616' } },
           boxShadow: { soft: '0 10px 30px rgba(0,0,0,.08)' }
         }
       }
     }
   </script>
+  <!-- CORREÇÃO: usar o mesmo nome do arquivo no repo (Logo.png com L maiúsculo) -->
   <link rel="icon" href="./Logo.png" type="image/png">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="./app-config.js"></script>
   <style> body{font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial} </style>
 </head>
 <body class="bg-gray-50 text-slate-900">
-  <!-- Top bar -->
   <header class="bg-white shadow-soft border-b border-slate-100">
     <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
+        <!-- CORREÇÃO AQUI TAMBÉM -->
         <img src="./Logo.png" alt="G2i" class="w-10 h-10 rounded-lg object-contain"/>
         <div>
           <div class="text-xl font-extrabold tracking-tight">G2i Analytics</div>
@@ -49,7 +43,6 @@
     </div>
   </header>
 
-  <!-- Main -->
   <main class="max-w-6xl mx-auto px-4 py-8">
     <div class="mb-6">
       <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-brand/10 text-brand-700 border border-brand/30">Acessos</span>
@@ -58,24 +51,20 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Card: set access -->
       <section class="bg-white border border-slate-100 rounded-2xl p-6 shadow-soft">
         <h2 class="text-lg font-bold mb-4">Conceder / Revogar</h2>
-
         <div class="space-y-4">
           <div>
             <label class="block text-sm text-slate-600 mb-1" for="email">E-mail do usuário</label>
             <input id="email" type="email" placeholder="usuario@empresa.com.br"
                    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 focus:outline-none focus:ring-4 focus:ring-brand/20">
           </div>
-
           <div>
             <label class="block text-sm text-slate-600 mb-1" for="page">Página</label>
             <select id="page"
                     class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 focus:outline-none focus:ring-4 focus:ring-brand/20">
             </select>
           </div>
-
           <div>
             <label class="block text-sm text-slate-600 mb-1" for="perm">Permissão</label>
             <select id="perm"
@@ -84,7 +73,6 @@
               <option value="false">Revogar</option>
             </select>
           </div>
-
           <div class="flex items-center gap-3">
             <button id="apply" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-600 active:bg-brand-700">
               Aplicar
@@ -94,21 +82,17 @@
         </div>
       </section>
 
-      <!-- Card: list access -->
       <section class="bg-white border border-slate-100 rounded-2xl p-6 shadow-soft">
         <h2 class="text-lg font-bold mb-4">Acessos do usuário</h2>
-
         <div class="space-y-4">
           <div>
             <label class="block text-sm text-slate-600 mb-1" for="emailList">E-mail</label>
             <input id="emailList" type="email" placeholder="usuario@empresa.com.br"
                    class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 focus:outline-none focus:ring-4 focus:ring-brand/20">
           </div>
-
           <button id="list" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 font-bold hover:bg-slate-50">
             Listar acessos
           </button>
-
           <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
               <thead>
@@ -125,12 +109,9 @@
     </div>
   </main>
 
-  <footer class="max-w-6xl mx-auto px-4 py-10 text-xs text-slate-500">
-    © G2i — Todos os direitos reservados.
-  </footer>
+  <footer class="max-w-6xl mx-auto px-4 py-10 text-xs text-slate-500">© G2i — Todos os direitos reservados.</footer>
 
   <script>
-    // ===== Helper UI
     function showStatus(ok, msg){
       const el = document.getElementById('status');
       el.classList.remove('hidden');
@@ -141,29 +122,18 @@
     }
 
     (async () => {
-      // ===== Init Supabase
       const cfg = window.APP_CONFIG || {};
       const { createClient } = window.supabase;
       const supabase = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
-      // ===== Require session (guard built-in)
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session || !session.user) {
-        const backTo = encodeURIComponent(location.pathname + location.search);
-        location.replace(`/login.html?next=${backTo}`);
-        return;
-      }
+      if (!session || !session.user) { location.replace('/login.html?next=' + encodeURIComponent(location.pathname)); return; }
 
-      // Require permission to "admin" page
       const { data: allowed } = await supabase
         .from('user_pages').select('page_id, can_view')
         .eq('user_id', session.user.id).eq('page_id', 'admin').eq('can_view', true).limit(1);
+      if (!allowed || !allowed.length){ location.replace('/no-access.html'); return; }
 
-      if (!allowed || !allowed.length){
-        location.replace('/no-access.html'); return;
-      }
-
-      // ===== Fill pages select
       const sel = document.getElementById('page');
       const { data: pages, error: pagesErr } = await supabase.from('pages').select('page_id,title').order('title');
       if (pagesErr) { showStatus(false, 'Erro carregando páginas: ' + pagesErr.message); }
@@ -174,22 +144,15 @@
         sel.appendChild(opt);
       });
 
-      // ===== Apply permission
       document.getElementById('apply').addEventListener('click', async () => {
         const email = document.getElementById('email').value.trim();
         const pageId = document.getElementById('page').value;
         const canView = document.getElementById('perm').value === 'true';
         showStatus(true, 'Aplicando...');
-        const { error } = await supabase.rpc('admin_set_access', {
-          target_email: email,
-          target_page_id: pageId,
-          target_can_view: canView
-        });
-        if (error) showStatus(false, 'Erro: ' + error.message);
-        else showStatus(true, 'OK. Permissão atualizada.');
+        const { error } = await supabase.rpc('admin_set_access', { target_email: email, target_page_id: pageId, target_can_view: canView });
+        if (error) showStatus(false, 'Erro: ' + error.message); else showStatus(true, 'OK. Permissão atualizada.');
       });
 
-      // ===== List permissions
       document.getElementById('list').addEventListener('click', async () => {
         const email = document.getElementById('emailList').value.trim();
         const tbody = document.getElementById('rows');
@@ -197,15 +160,9 @@
         const { data, error } = await supabase.rpc('admin_list_access', { target_email: email });
         if (error) { tbody.innerHTML = '<tr><td class="py-3 text-red-600" colspan="2">Erro: ' + error.message + '</td></tr>'; return; }
         if (!data || !data.length) { tbody.innerHTML = '<tr><td class="py-3 text-slate-500" colspan="2">Nenhuma permissão para este usuário.</td></tr>'; return; }
-        tbody.innerHTML = data.map(r => `
-          <tr class="border-b border-slate-100">
-            <td class="py-2 pr-4">${r.page_id}</td>
-            <td class="py-2">${r.can_view ? '✅ Liberado' : '❌ Revogado'}</td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = data.map(r => `<tr class="border-b border-slate-100"><td class="py-2 pr-4">${r.page_id}</td><td class="py-2">${r.can_view ? '✅ Liberado' : '❌ Revogado'}</td></tr>`).join('');
       });
 
-      // ===== Logout
       document.getElementById('logout').addEventListener('click', async () => {
         await supabase.auth.signOut();
         location.replace('/login.html');
